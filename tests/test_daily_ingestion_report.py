@@ -48,6 +48,10 @@ def test_summarize_with_ollama_posts_expected_payload(monkeypatch):
     assert captured["url"] == "http://ollama:11434/v1/chat/completions"
     assert captured["json"]["model"] == "llama3.1"
     assert captured["headers"]["Authorization"] == "Bearer secret"
+    prompt = captured["json"]["messages"][0]["content"]
+    assert "exact timestamp" in prompt
+    assert "occurred today" in prompt
+    assert "NOT TODAY" in prompt
 
 
 def test_post_to_discord_chunks_long_messages(monkeypatch):
