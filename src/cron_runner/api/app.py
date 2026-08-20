@@ -13,6 +13,17 @@ def create_app() -> Bottle:
     register_job_routes(app)
     register_run_routes(app)
 
+    # CORS is wide open by design (read-only, no-auth API); not configurable via env.
+    @app.hook("after_request")
+    def _add_cors_headers() -> None:
+        response.set_header("Access-Control-Allow-Origin", "*")
+        response.set_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        response.set_header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
+
+    @app.route("/<_path:path>", method="OPTIONS")
+    def _cors_preflight(_path: str) -> dict:
+        return {}
+
     @app.error(404)
     def not_found(_err: object) -> dict:
         response.content_type = "application/json"
