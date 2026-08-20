@@ -7,7 +7,8 @@ raw results into human-readable text, and posts that summary to a Discord
 channel via webhook.
 
 Configuration is read entirely from the environment (see docker-compose.yml):
-  QUANT_DATABASE_URL   Shared Postgres connection string for the quant services.
+  DATABASE_URL         Shared Postgres connection string (same database cron-runner
+                       uses for its own job_runs table).
   OLLAMA_BASE_URL      Base URL of an OpenAI-compatible Ollama endpoint, e.g.
                        http://ollama:11434/v1
   OLLAMA_MODEL         Model name to use for summarization.
@@ -139,7 +140,7 @@ def post_to_discord(webhook_url: str, message: str) -> None:
 
 
 def main() -> int:
-    database_url = _require_env("QUANT_DATABASE_URL")
+    database_url = _require_env("DATABASE_URL")
     ollama_base_url = _require_env("OLLAMA_BASE_URL")
     ollama_model = _require_env("OLLAMA_MODEL")
     ollama_api_key = os.environ.get("OLLAMA_API_KEY")

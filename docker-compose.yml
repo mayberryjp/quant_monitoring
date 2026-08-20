@@ -4,10 +4,10 @@ services:
     environment:
       API_PORT: "8000"
       CRON_SCHEDULE_FILE: "/app/config/schedule.yaml"
-      DATABASE_URL: "postgresql+psycopg://user:pass@shared-db-host:5432/shared_db"
-      # Shared Postgres database used by quant_symbols / quant_daily_bars /
-      # quant_momentum / quant_indicators (read-only access for daily_ingestion_report.py)
-      QUANT_DATABASE_URL: "postgresql+psycopg://quant:quant_dev_password@quant-postgres:5432/quant"
+      # Shared Postgres used by cron-runner's own job_runs table AND by
+      # quant_symbols / quant_daily_bars / quant_momentum / quant_indicators
+      # (read-only access for daily_ingestion_report.py)
+      DATABASE_URL: "postgresql+psycopg://quant:quant_dev_password@quant-postgres:5432/quant"
       # OpenAI-compatible Ollama endpoint used to summarize ingestion run results
       OLLAMA_BASE_URL: "http://ollama:11434/v1"
       OLLAMA_MODEL: "llama3.1"
@@ -17,4 +17,4 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./config/schedule.yaml:/app/config/schedule.yaml:ro
+      - /docker/monitoring/schedule.yaml:/app/config/schedule.yaml:ro
