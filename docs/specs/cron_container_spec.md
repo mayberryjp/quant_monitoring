@@ -405,10 +405,12 @@ race, `/ready` still correctly reports `503` until the schema is in place.
 
 ## 11. Dockerfile / Compose
 
-Dockerfile follows the standard's Section 12 baseline (non-root user, `HEALTHCHECK` against
-`/health`, no `git clone`, local `COPY` build context, includes `scripts/`, `config/`, and
-`alembic/`), with `CMD ["supervisord", "-c", "/app/supervisord.conf", "-n"]` -- the migration is
-no longer run from the Dockerfile `CMD`; it is the `db-migrate` supervisor program above.
+Dockerfile follows the standard's Section 12 baseline (non-root user, no `git clone`, local
+`COPY` build context, includes `scripts/`, `config/`, and `alembic/`), with
+`CMD ["supervisord", "-c", "/app/supervisord.conf", "-n"]` -- the migration is no longer run
+from the Dockerfile `CMD`; it is the `db-migrate` supervisor program above. There is no
+Docker-level `HEALTHCHECK`; liveness/readiness are exposed via `/health`/`/ready` for an external
+orchestrator or monitor to poll instead.
 
 `docker-compose.yml` references the built image (per project convention) rather than a build
 path, and includes only this service — no bundled dependency containers (the shared database is

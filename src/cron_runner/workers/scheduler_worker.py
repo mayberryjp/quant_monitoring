@@ -141,13 +141,13 @@ class SchedulerWorker:
 
         while not self._stop_requested:
             try:
-                self._maybe_reload()
-
                 if settings.config_reload_seconds and (
                     time.monotonic() - last_reload_check >= settings.config_reload_seconds
                 ):
                     self.request_reload()
                     last_reload_check = time.monotonic()
+
+                self._maybe_reload()
 
                 now = datetime.now(UTC)
                 minute_key = now.strftime("%Y-%m-%dT%H:%M")

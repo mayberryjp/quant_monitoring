@@ -17,4 +17,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - /docker/monitoring/schedule.yaml:/app/config/schedule.yaml:ro
+      # Mount the directory, not the single file: bind-mounting one file pins the
+      # container to that file's inode, so an editor's atomic save (write-new + rename)
+      # leaves the container reading stale content. Directory mounts resolve by path.
+      - /docker/monitoring:/app/config:ro
