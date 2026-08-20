@@ -1,0 +1,20 @@
+services:
+  cron-runner:
+    image: ghcr.io/mayberryjp/cron-runner:latest
+    environment:
+      API_PORT: "8000"
+      CRON_SCHEDULE_FILE: "/app/config/schedule.yaml"
+      DATABASE_URL: "postgresql+psycopg://user:pass@shared-db-host:5432/shared_db"
+      # Shared Postgres database used by quant_symbols / quant_daily_bars /
+      # quant_momentum / quant_indicators (read-only access for daily_ingestion_report.py)
+      QUANT_DATABASE_URL: "postgresql+psycopg://quant:quant_dev_password@quant-postgres:5432/quant"
+      # OpenAI-compatible Ollama endpoint used to summarize ingestion run results
+      OLLAMA_BASE_URL: "http://ollama:11434/v1"
+      OLLAMA_MODEL: "llama3.1"
+      OLLAMA_API_KEY: ""
+      # Discord incoming webhook the daily ingestion report is posted to
+      DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/CHANGE_ME/CHANGE_ME"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config/schedule.yaml:/app/config/schedule.yaml:ro
