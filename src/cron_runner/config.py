@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="CRON_", extra="ignore")
 
     schedule_file: str = Field("config/schedule.yaml", validation_alias="CRON_SCHEDULE_FILE")
-    poll_interval_seconds: int = Field(1, validation_alias="CRON_POLL_INTERVAL_SECONDS")
+    poll_interval_seconds: int = Field(60, validation_alias="CRON_POLL_INTERVAL_SECONDS")
     config_reload_seconds: int = Field(0, validation_alias="CRON_CONFIG_RELOAD_SECONDS")
     api_listen_address: str = Field("0.0.0.0", validation_alias="API_LISTEN_ADDRESS")
     api_port: int = Field(8000, validation_alias="API_PORT")

@@ -127,7 +127,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="CRON_", extra="ignore")
 
     schedule_file: str = Field("config/schedule.yaml", validation_alias="CRON_SCHEDULE_FILE")
-    poll_interval_seconds: int = Field(1, validation_alias="CRON_POLL_INTERVAL_SECONDS")
+    poll_interval_seconds: int = Field(60, validation_alias="CRON_POLL_INTERVAL_SECONDS")
     config_reload_seconds: int = Field(0, validation_alias="CRON_CONFIG_RELOAD_SECONDS")
     api_listen_address: str = Field("0.0.0.0", validation_alias="API_LISTEN_ADDRESS")
     api_port: int = Field(8000, validation_alias="API_PORT")
@@ -144,8 +144,8 @@ settings = Settings()
 `src/cron_runner/workers/scheduler_worker.py` exposes `main()` and is the container's primary
 process (run under supervisord alongside the health API).
 
-Loop (runs every `poll_interval_seconds`, default 1s, to give minute-granularity cron reliable
-firing without drift):
+Loop (runs every `poll_interval_seconds`, default 60s -- cron itself only has minute
+resolution, so polling more often than once a minute adds overhead without adding accuracy):
 
 1. Compute the current minute (truncated to the minute boundary) and compare against each enabled
    job's cron expression using `croniter.match(schedule, now)`.
