@@ -1,8 +1,8 @@
-timezone: "UTC"
+timezone: "Asia/Tokyo"
 jobs:
   - name: "daily_ingestion_report"
-    script: "scripts/daily_ingestion_report.py"
-    schedule: "0 16 * * *"
+    script: "/app/scripts/daily_ingestion_report.py"
+    schedule: "59 15 * * *"
     timezone: "Asia/Tokyo"
     args: []
     timeout_seconds: 300
