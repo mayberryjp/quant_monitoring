@@ -22,7 +22,13 @@ VERSION_TABLE = "alembic_version_cron_runner"
 
 
 def get_url() -> str:
-    return os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url") or "")
+    url = os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url") or "")
+    if not url:
+        raise RuntimeError(
+            "DATABASE_URL is not set (and alembic.ini has no sqlalchemy.url). "
+            "Set DATABASE_URL in the environment before running 'alembic upgrade head'."
+        )
+    return url
 
 
 def run_migrations_offline() -> None:

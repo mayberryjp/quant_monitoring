@@ -325,9 +325,9 @@ This service's database may be shared with other, unrelated projects/services. T
   set `version_table` to match `alembic.ini` for both offline and online migration modes.
 - First migration (`alembic revision -m "create cron_runner_job_runs"`) creates the table from
   Section 8.1 with both `upgrade()` and `downgrade()`.
-- Migrations run at container startup before the scheduler/API start (`alembic upgrade head &&
-  supervisord ...`, per the standard's Section 12 Dockerfile `CMD`); if migrations fail, startup
-  fails.
+- Migrations run as a supervisor-managed `db-migrate` program at container startup, before the
+  scheduler/API (see Section 10); if migrations fail, `db-migrate` exits non-zero and is not
+  restarted (surfacing the failure in supervisor logs) rather than being silently retried.
 
 ## 9. API / Health Endpoints
 
@@ -349,7 +349,9 @@ Error envelope and HTTP status mapping follow the standard's Section 7 exactly.
 
 ## 10. Container Process Model (supervisord)
 
-Two processes managed by supervisord, both logging to stdout/stderr:
+Three programs managed by supervisord, all logging to stdout/stderr. `db-migrate` runs the
+Alembic migration once at a lower `priority` (starts first) and does not `autorestart`; `api`
+and `scheduler` start after it at a higher priority number:
 
 ```ini
 [supervisord]
@@ -357,9 +359,22 @@ nodaemon=true
 logfile=/dev/null
 logfile_maxbytes=0
 
+[program:db-migrate]
+command=alembic upgrade head
+directory=/app
+priority=10
+autostart=true
+autorestart=false
+startsecs=0
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
 [program:api]
 command=python -m cron_runner.api_main
 directory=/app
+priority=20
 autostart=true
 autorestart=true
 startretries=3
@@ -371,6 +386,7 @@ stderr_logfile_maxbytes=0
 [program:scheduler]
 command=python -m cron_runner.workers.scheduler_worker
 directory=/app
+priority=20
 autostart=true
 autorestart=true
 startretries=3
@@ -380,11 +396,17 @@ stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
 ```
 
+Note: supervisord `priority` only controls *start order*, not a wait-for-completion
+dependency -- `api`/`scheduler` are started immediately after `db-migrate` is launched, not
+after it exits. Migrations are expected to be fast; if a migration is slow enough to lose this
+race, `/ready` still correctly reports `503` until the schema is in place.
+
 ## 11. Dockerfile / Compose
 
 Dockerfile follows the standard's Section 12 baseline (non-root user, `HEALTHCHECK` against
 `/health`, no `git clone`, local `COPY` build context, includes `scripts/`, `config/`, and
-`alembic/`), with `CMD ["/bin/sh", "-c", "alembic upgrade head && supervisord -c /app/supervisord.conf -n"]`.
+`alembic/`), with `CMD ["supervisord", "-c", "/app/supervisord.conf", "-n"]` -- the migration is
+no longer run from the Dockerfile `CMD`; it is the `db-migrate` supervisor program above.
 
 `docker-compose.yml` references the built image (per project convention) rather than a build
 path, and includes only this service — no bundled dependency containers (the shared database is
