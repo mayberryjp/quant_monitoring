@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from unittest.mock import patch
 
 from cron_runner.scheduling.models import JobDefinition
-from cron_runner.workers.scheduler_worker import SchedulerWorker
+from cron_runner.workers.scheduler_worker import MAX_THREAD_POOL_SIZE, SchedulerWorker
 
 
 def make_job(name: str, allow_concurrent: bool = False) -> JobDefinition:
@@ -14,6 +14,22 @@ def make_job(name: str, allow_concurrent: bool = False) -> JobDefinition:
         timeout_seconds=30,
         allow_concurrent=allow_concurrent,
     )
+
+
+def test_executor_pool_size_is_fixed_regardless_of_initial_job_count(tmp_path):
+    # Regression test: the pool must not be sized to the job count at startup, since
+    # jobs can be added later via a schedule reload without recreating the executor.
+    path = tmp_path / "schedule.yaml"
+    path.write_text(
+        "jobs:\n  - name: only_job\n    script: x.py\n    schedule: '* * * * *'\n    timeout_seconds: 5\n"
+    )
+    with patch("cron_runner.workers.scheduler_worker.settings") as mocked_settings:
+        mocked_settings.schedule_file = str(path)
+        worker = SchedulerWorker()
+        worker.load_initial_schedule()
+
+    assert worker.executor is not None
+    assert worker.executor._max_workers == MAX_THREAD_POOL_SIZE
 
 
 def test_dispatch_skips_when_already_running_and_not_allow_concurrent():

@@ -154,7 +154,9 @@ resolution, so polling more often than once a minute adds overhead without addin
      - If running and `allow_concurrent: false`, skip the run and log a `skipped_overlap` event
        (warning level) — this does **not** count as a failure.
      - Otherwise, dispatch the job to the `JobRunner` in a dedicated worker thread from a bounded
-       `ThreadPoolExecutor` (pool size configurable, default = number of jobs, capped at 32).
+       `ThreadPoolExecutor` fixed at `MAX_THREAD_POOL_SIZE` (32) workers -- **not** sized to the
+       current job count, since `ThreadPoolExecutor` cannot be resized after creation and jobs
+       can be added later via a schedule reload without a process restart.
    - Guarantee each job fires **at most once per matching minute** by tracking
      `(job_name, minute_bucket)` already dispatched, so a slow poll loop can never double-fire.
 3. Emit a heartbeat timestamp on every loop iteration, written to a small local file

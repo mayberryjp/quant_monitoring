@@ -65,8 +65,11 @@ class SchedulerWorker:
         self.schedule = load_schedule_file(settings.schedule_file)
         state.schedule_loaded = True
         state.job_count = len(self.schedule.jobs)
-        pool_size = min(max(len(self.schedule.jobs), 1), MAX_THREAD_POOL_SIZE)
-        self.executor = ThreadPoolExecutor(max_workers=pool_size, thread_name_prefix="job")
+        # Fixed at MAX_THREAD_POOL_SIZE (not sized to the current job count) so that jobs
+        # added later via a schedule reload always have a free worker thread available --
+        # ThreadPoolExecutor cannot be resized after creation, so sizing it to the initial
+        # job count would silently serialize jobs added after startup.
+        self.executor = ThreadPoolExecutor(max_workers=MAX_THREAD_POOL_SIZE, thread_name_prefix="job")
         log.info("loaded %s job(s) from %s", state.job_count, settings.schedule_file)
 
     def request_reload(self, *_args: object) -> None:
