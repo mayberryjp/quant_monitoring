@@ -93,7 +93,6 @@ class SchedulerWorker:
         self.schedule = new_schedule
         state.job_count = len(new_schedule.jobs)
         state.last_reload_error = None
-        log.info("reloaded schedule: %s job(s) now active", state.job_count)
 
     def _dispatch(self, job: JobDefinition, minute_key: str) -> None:
         if self.registry.is_running(job.name) and not job.allow_concurrent:
