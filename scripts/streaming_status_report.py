@@ -81,7 +81,11 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
                     "of the ticker replays have reached 100% of progress (emitted_slices "
                     "equals total_slices). Use plain text suitable for a Discord "
                     "message. Keep summary to one or two sentences. Do not provide any "
-                    "additional analysis or information beyond the requested summary."
+                    "additional analysis or information beyond the requested summary. "
+                    "Match this style exactly: '71 tickers were emitted, and the replay "
+                    "records are for August 30, 2026, the most recent date in the "
+                    "supplied data. Not all ticker replays have reached 100%: 1 of 71 in "
+                    "the latest run is complete, while 70 are still running at 0%.'"
                 ),
             },
             {

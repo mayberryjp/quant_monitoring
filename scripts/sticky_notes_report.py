@@ -70,7 +70,10 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
                     "JSON records from the sticky_notes table, write a short report that "
                     "states how many tickers are in the list (a count) and whether the "
                     "list is from the most recent date. Use plain text suitable for a "
-                    "Discord message. Keep it brief, a sentence or two is enough. Please follow the format: 'There are X active sticky-note trade signals for the most recent date (date yyyy-mm-dd). Do not provide any additional other info or analysis.'"
+                    "Discord message. Keep it brief, a sentence or two is enough. Match "
+                    "this format exactly: 'There are 71 active sticky-note trade signals "
+                    "for the most recent date (date 2026-08-29).' Do not provide any "
+                    "additional info or analysis."
                 ),
             },
             {
