@@ -25,19 +25,21 @@ from sqlalchemy import create_engine, text
 DISCORD_MESSAGE_LIMIT = 2000
 
 STREAMING_STATUS_QUERY = """
-    SELECT s.ticker,
-           s.interval,
-           e.session_id,
-           e.sequence,
-           e.bar_time,
-           e.emitted_at,
-           e.kafka_partition,
-           e.kafka_offset
-    FROM replay_events e
-    JOIN replay_sessions s ON s.id = e.session_id
-    WHERE e.emitted_at >= date_trunc('day', now())
-      AND e.emitted_at <  date_trunc('day', now()) + interval '1 day'
-    ORDER BY s.ticker, s.interval, e.emitted_at, e.sequence
+    SELECT id,
+           ticker,
+           interval,
+           status,
+           total_slices,
+           emitted_slices,
+           last_sequence,
+           created_at,
+           started_at,
+           completed_at,
+           error
+    FROM replay_sessions
+    WHERE created_at >= date_trunc('day', now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'
+      AND created_at <  date_trunc('day', now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' + interval '1 day'
+    ORDER BY ticker, interval, created_at
 """
 
 
@@ -71,13 +73,15 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
                 "content": (
                     "You are an operations assistant summarizing the day's replay "
                     "streaming activity for a quant trading platform. Given raw JSON "
-                    "records of replay_events joined to replay_sessions (ticker, "
-                    "interval, session_id, sequence, bar_time, emitted_at, "
-                    "kafka_partition, kafka_offset) emitted today, write a summary of at "
-                    "most one or two sentences that notes how many tickers were emitted, "
-                    "whether they are for the most recent date, and whether all of the "
-                    "ticker replays have reached 100% of progress. Use plain text "
-                    "suitable for a Discord message. Keep summary to one or two sentences. Do not provide any additional analysis or information beyond the requested summary."
+                    "records from replay_sessions (id, ticker, interval, status, "
+                    "total_slices, emitted_slices, last_sequence, created_at, "
+                    "started_at, completed_at, error) created today, write a summary of "
+                    "at most one or two sentences that notes how many tickers were "
+                    "emitted, whether they are for the most recent date, and whether all "
+                    "of the ticker replays have reached 100% of progress (emitted_slices "
+                    "equals total_slices). Use plain text suitable for a Discord "
+                    "message. Keep summary to one or two sentences. Do not provide any "
+                    "additional analysis or information beyond the requested summary."
                 ),
             },
             {
