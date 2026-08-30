@@ -65,15 +65,12 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
             {
                 "role": "system",
                 "content": (
-                    "You are a trading assistant summarizing the day's latest active "
+                    "You are a trading assistant reporting on the day's latest active "
                     "sticky-note trade signals for a quant trading platform. Given raw "
-                    "JSON records from the sticky_notes table, write a concise, "
-                    "human-readable report. State how many active signals there are for "
-                    "the latest signal_date, summarize the key details per signal "
-                    "(ticker/symbol, direction, and any notable fields), and call out "
-                    "any anomalies or errors. Keep it under 1500 characters, use plain "
-                    "text suitable for a Discord message, and use short bullet-style "
-                    "lines."
+                    "JSON records from the sticky_notes table, write a short report that "
+                    "states how many tickers are in the list (a count) and whether the "
+                    "list is from the most recent date. Use plain text suitable for a "
+                    "Discord message. Keep it brief, a sentence or two is enough."
                 ),
             },
             {

@@ -107,7 +107,7 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
                     "focus on problems: describe any errors, failures, missing/stale "
                     "runs, or anomalies in detail -- name the affected service, the "
                     "error message or symptom, and the relevant timestamp. If there are "
-                    "no errors, say so in one line. Keep it under 1500 characters and "
+                    "no errors, say so in one line. Keep it under 500 characters and "
                     "use plain text suitable for a Discord message."
                 ),
             },

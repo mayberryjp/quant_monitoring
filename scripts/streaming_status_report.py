@@ -73,12 +73,11 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
                     "streaming activity for a quant trading platform. Given raw JSON "
                     "records of replay_events joined to replay_sessions (ticker, "
                     "interval, session_id, sequence, bar_time, emitted_at, "
-                    "kafka_partition, kafka_offset) emitted today, write a concise, "
-                    "human-readable status report. State how many events were emitted "
-                    "today, break down activity per ticker/interval and session, note "
-                    "the time range of emissions, and call out any gaps, anomalies, or "
-                    "errors. Keep it under 1500 characters, use plain text suitable for "
-                    "a Discord message, and use short bullet-style lines."
+                    "kafka_partition, kafka_offset) emitted today, write a summary of at "
+                    "most one or two sentences that notes how many tickers were emitted, "
+                    "whether they are for the most recent date, and whether all of the "
+                    "ticker replays have reached 100% of progress. Use plain text "
+                    "suitable for a Discord message. Keep summary to one or two sentences. "
                 ),
             },
             {
