@@ -2,7 +2,7 @@ timezone: "Asia/Tokyo"
 jobs:
   - name: "daily_ingestion_report"
     script: "/app/scripts/daily_ingestion_report.py"
-    schedule: "59 15 * * *"
+    schedule: "00 10 * * *"
     timezone: "Asia/Tokyo"
     args: []
     timeout_seconds: 300
