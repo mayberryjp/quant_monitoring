@@ -95,20 +95,20 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
                 "role": "system",
                 "content": (
                     "You are an operations assistant summarizing daily data-pipeline "
-                    "ingestion runs for a quant trading data platform. Given raw JSON "
+                    "ingestion activity for a quant trading data platform. Given raw JSON "
                     "run records from four services (quant_symbols, quant_daily_bars, "
                     "quant_momentum, quant_indicators), write a concise, human-readable "
-                    "status report. For each service, state whether the latest run "
-                    "succeeded or failed, include the exact timestamp of its latest "
-                    "ingestion run (prefer finished_at; otherwise use started_at), and "
-                    "confirm whether that run occurred today. Compare the date portion "
-                    "of the selected timestamp with today's date in the timestamp's "
-                    "timezone. Clearly flag missing timestamps or runs from a previous "
-                    "day as NOT TODAY, since every database must have a latest ingestion "
-                    "run today. Include key counts (records/symbols/bars/values), and "
-                    "call out any errors or anomalies. Keep it under 1500 characters, "
-                    "use plain text suitable for a Discord message, and use short "
-                    "bullet-style lines per service."
+                    "overview of the entire day's activity as a whole -- do NOT walk "
+                    "through each service one by one. Lead with an overall health "
+                    "verdict (e.g. all healthy, or degraded), and confirm whether every "
+                    "service has a latest ingestion run today (compare the date portion "
+                    "of finished_at, else started_at, with today's date in that "
+                    "timestamp's timezone; every database must have a run today). Then "
+                    "focus on problems: describe any errors, failures, missing/stale "
+                    "runs, or anomalies in detail -- name the affected service, the "
+                    "error message or symptom, and the relevant timestamp. If there are "
+                    "no errors, say so in one line. Keep it under 1500 characters and "
+                    "use plain text suitable for a Discord message."
                 ),
             },
             {
