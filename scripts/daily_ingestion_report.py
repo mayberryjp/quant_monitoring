@@ -11,7 +11,8 @@ Configuration is read entirely from the environment (see docker-compose.yml):
                        uses for its own job_runs table).
   OLLAMA_BASE_URL      Base URL of an OpenAI-compatible Ollama endpoint, e.g.
                        http://ollama:11434/v1
-  OLLAMA_MODEL         Model name to use for summarization.
+  OLLAMA_MODEL                   Model name to use for summarization.
+  DAILY_INGESTION_OLLAMA_MODEL   Optional per-script override of OLLAMA_MODEL.
   OLLAMA_API_KEY       Optional bearer token (Ollama typically ignores this).
   DISCORD_WEBHOOK_URL  Discord incoming webhook URL to post the summary to.
 """
@@ -26,6 +27,8 @@ import requests
 from sqlalchemy import create_engine, text
 
 DISCORD_MESSAGE_LIMIT = 2000
+
+REPORT_TITLE = "📥 Daily Ingestion Report"
 
 LATEST_RUN_QUERIES: dict[str, str] = {
     "quant_symbols": """
@@ -148,7 +151,7 @@ def post_to_discord(webhook_url: str, message: str) -> None:
 def main() -> int:
     database_url = _require_env("DATABASE_URL")
     ollama_base_url = _require_env("OLLAMA_BASE_URL")
-    ollama_model = _require_env("OLLAMA_MODEL")
+    ollama_model = os.environ.get("DAILY_INGESTION_OLLAMA_MODEL") or _require_env("OLLAMA_MODEL")
     ollama_api_key = os.environ.get("OLLAMA_API_KEY")
     discord_webhook_url = _require_env("DISCORD_WEBHOOK_URL")
 
@@ -158,7 +161,7 @@ def main() -> int:
     summary = summarize_with_ollama(ollama_base_url, ollama_model, ollama_api_key, raw_runs)
     print("summary_generated ok")
 
-    post_to_discord(discord_webhook_url, summary)
+    post_to_discord(discord_webhook_url, f"**{REPORT_TITLE}**\n{summary}")
     print("posted_to_discord ok")
     return 0
 
