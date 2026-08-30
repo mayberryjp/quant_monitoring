@@ -1,11 +1,12 @@
 """Daily trade summary report.
 
-Pulls the day's executed trades from Postgres, asks an OpenAI-compatible Ollama
-endpoint to summarize the raw results into human-readable text, and posts that
-summary to a Discord channel via webhook.
+Pulls the day's PnL summary from the execution PnL API, asks an
+OpenAI-compatible Ollama endpoint to summarize the raw results into
+human-readable text, and posts that summary to a Discord channel via webhook.
 
 Configuration is read entirely from the environment (see docker-compose.yml):
-  DATABASE_URL         Shared Postgres connection string.
+  PNL_API_BASE_URL     Base URL of the execution PnL API. Defaults to
+                       http://execution.quant.mayberry.farm:8028
   OLLAMA_BASE_URL      Base URL of an OpenAI-compatible Ollama endpoint, e.g.
                        http://ollama:11434/v1
   OLLAMA_MODEL         Model name to use for summarization.
@@ -17,19 +18,14 @@ from __future__ import annotations
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from typing import Any
 
 import requests
-from sqlalchemy import create_engine, text
 
 DISCORD_MESSAGE_LIMIT = 2000
 
-DAILY_TRADES_QUERY = """
-    SELECT *
-    FROM execution.trades
-    WHERE created_at::date = current_date
-    ORDER BY created_at DESC
-"""
+DEFAULT_PNL_API_BASE_URL = "http://execution.quant.mayberry.farm:8028"
 
 
 def _require_env(name: str) -> str:
@@ -39,18 +35,16 @@ def _require_env(name: str) -> str:
     return value
 
 
-def fetch_daily_trades(database_url: str) -> Any:
-    """Best-effort fetch of today's executed trades."""
-    engine = create_engine(database_url, pool_pre_ping=True)
+def fetch_daily_trades(pnl_api_base_url: str) -> Any:
+    """Best-effort fetch of today's PnL summary from the execution PnL API."""
+    trade_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    url = f"{pnl_api_base_url.rstrip('/')}/pnl/{trade_date}"
     try:
-        with engine.connect() as conn:
-            try:
-                rows = conn.execute(text(DAILY_TRADES_QUERY)).mappings().all()
-                return [dict(row) for row in rows]
-            except Exception as exc:  # noqa: BLE001
-                return {"error": f"{type(exc).__name__}: {exc}"}
-    finally:
-        engine.dispose()
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        return response.json()
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"}
 
 
 def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_data: Any) -> str:
@@ -60,14 +54,12 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
             {
                 "role": "system",
                 "content": (
-                    "You are a trading assistant summarizing the day's executed trades "
-                    "for a quant trading platform. Given raw JSON records from the "
-                    "execution.trades table created today, write a concise, "
-                    "human-readable summary. State how many trades executed today, "
-                    "break down activity by symbol/side, summarize total and notable "
-                    "quantities/prices/PnL where present, and call out any anomalies or "
-                    "errors. Keep it under 1500 characters, use plain text suitable for "
-                    "a Discord message, and use short bullet-style lines."
+                    "You are a trading assistant summarizing the day's PnL for a quant "
+                    "trading platform. Given raw JSON from the execution PnL API for "
+                    "today, write a concise, human-readable summary that describes the "
+                    "number of trades, the P&L for the date, the number of winning and "
+                    "losing trades, the total amount invested, and whether it was live "
+                    "or paper trading. Use plain text suitable for a Discord message."
                 ),
             },
             {
@@ -105,13 +97,13 @@ def post_to_discord(webhook_url: str, message: str) -> None:
 
 
 def main() -> int:
-    database_url = _require_env("DATABASE_URL")
+    pnl_api_base_url = os.environ.get("PNL_API_BASE_URL", DEFAULT_PNL_API_BASE_URL)
     ollama_base_url = _require_env("OLLAMA_BASE_URL")
     ollama_model = _require_env("OLLAMA_MODEL")
     ollama_api_key = os.environ.get("OLLAMA_API_KEY")
     discord_webhook_url = _require_env("DISCORD_WEBHOOK_URL")
 
-    raw_trades = fetch_daily_trades(database_url)
+    raw_trades = fetch_daily_trades(pnl_api_base_url)
     print("raw_daily_trades=" + json.dumps(raw_trades, default=str))
 
     summary = summarize_with_ollama(ollama_base_url, ollama_model, ollama_api_key, raw_trades)
