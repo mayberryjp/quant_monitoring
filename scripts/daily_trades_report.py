@@ -57,9 +57,10 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
                     "You are a trading assistant summarizing the day's PnL for a quant "
                     "trading platform. Given raw JSON from the execution PnL API for "
                     "today, write a concise, human-readable summary that describes the "
-                    "number of trades, the P&L for the date, the number of winning and "
-                    "losing trades, the total amount invested, and whether it was live "
-                    "or paper trading. Use plain text suitable for a Discord message."
+                    "number of trades, the realized P&L for the date, the number of "
+                    "winning and losing trades, and whether it was live or paper "
+                    "trading. Do not mention the amount invested or gross proceeds. Use "
+                    "plain text suitable for a Discord message."
                 ),
             },
             {
