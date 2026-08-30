@@ -14,6 +14,7 @@ class JobDefinition(BaseModel):
     args: list[str] = Field(default_factory=list)
     timeout_seconds: int
     enabled: bool = True
+    run_weekend: bool = False
     allow_concurrent: bool = False
     max_retries: int = 0
     retry_delay_seconds: int = 0

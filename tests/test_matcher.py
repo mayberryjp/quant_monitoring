@@ -61,3 +61,24 @@ def test_due_jobs_uses_schedule_default_timezone_when_job_has_none():
     )
     at_utc = datetime(2026, 8, 20, 7, 0, 0, tzinfo=UTC)
     assert due_jobs(schedule, at_utc) != []
+
+
+def test_weekday_only_job_does_not_run_on_weekend():
+    # 2026-08-22 is a Saturday in New York (16:00 UTC == 12:00 EDT).
+    job = make_job("weekday_job", "0 12 * * *")
+    saturday = datetime(2026, 8, 22, 16, 0, 0, tzinfo=UTC)
+    friday = datetime(2026, 8, 21, 16, 0, 0, tzinfo=UTC)
+    assert is_due(job, saturday, "America/New_York") is False
+    assert is_due(job, friday, "America/New_York") is True
+
+
+def test_run_weekend_job_runs_on_weekend():
+    job = JobDefinition(
+        name="weekend_job",
+        script="scripts/x.py",
+        schedule="0 12 * * *",
+        timeout_seconds=30,
+        run_weekend=True,
+    )
+    saturday = datetime(2026, 8, 22, 16, 0, 0, tzinfo=UTC)
+    assert is_due(job, saturday, "America/New_York") is True
