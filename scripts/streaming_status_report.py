@@ -77,7 +77,7 @@ def summarize_with_ollama(base_url: str, model: str, api_key: str | None, raw_da
                     "most one or two sentences that notes how many tickers were emitted, "
                     "whether they are for the most recent date, and whether all of the "
                     "ticker replays have reached 100% of progress. Use plain text "
-                    "suitable for a Discord message. Keep summary to one or two sentences. "
+                    "suitable for a Discord message. Keep summary to one or two sentences. Do not provide any additional analysis or information beyond the requested summary."
                 ),
             },
             {
