@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 import requests
@@ -40,7 +40,7 @@ def _require_env(name: str) -> str:
 
 def fetch_daily_trades(pnl_api_base_url: str) -> Any:
     """Best-effort fetch of today's PnL summary from the execution PnL API."""
-    trade_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    trade_date = datetime.now().strftime("%Y-%m-%d")
     url = f"{pnl_api_base_url.rstrip('/')}/pnl/{trade_date}"
     try:
         response = requests.get(url, timeout=30)
