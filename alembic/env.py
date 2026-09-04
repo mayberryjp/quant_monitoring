@@ -6,10 +6,10 @@ from __future__ import annotations
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, text
 
 from alembic import context
-from cron_runner.repository.models import metadata
+from cron_runner.repository.models import SCHEMA_NAME, metadata
 
 config = context.config
 
@@ -38,9 +38,41 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         version_table=VERSION_TABLE,
+        version_table_schema=SCHEMA_NAME,
     )
     with context.begin_transaction():
         context.run_migrations()
+
+
+def _prepare_schema(connection) -> None:
+    """Ensure the `monitoring` schema exists and relocate a pre-existing Alembic
+    version table into it, so Alembic finds its migration history under the new
+    schema. Idempotent: a no-op once the version table already lives there."""
+    connection.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{SCHEMA_NAME}"'))
+    connection.execute(
+        text(
+            f"""
+            DO $$
+            DECLARE
+                src text;
+            BEGIN
+                SELECT table_schema INTO src
+                FROM information_schema.tables
+                WHERE table_name = '{VERSION_TABLE}'
+                  AND table_type = 'BASE TABLE'
+                  AND table_schema NOT IN ('{SCHEMA_NAME}', 'pg_catalog', 'information_schema')
+                ORDER BY table_schema
+                LIMIT 1;
+
+                IF src IS NOT NULL THEN
+                    EXECUTE format(
+                        'ALTER TABLE %I.{VERSION_TABLE} SET SCHEMA {SCHEMA_NAME}', src
+                    );
+                END IF;
+            END $$;
+            """
+        )
+    )
 
 
 def run_migrations_online() -> None:
@@ -53,10 +85,13 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        with connection.begin():
+            _prepare_schema(connection)
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             version_table=VERSION_TABLE,
+            version_table_schema=SCHEMA_NAME,
         )
         with context.begin_transaction():
             context.run_migrations()

@@ -35,8 +35,8 @@ LATEST_RUN_QUERIES: dict[str, str] = {
         SELECT r.id, v.code AS vendor, r.endpoint, r.status, r.started_at, r.finished_at,
                r.records_seen, r.records_inserted, r.records_failed,
                r.symbols_new, r.symbols_delisted, r.error_message
-        FROM symbol_master.vendor_api_runs r
-        JOIN symbol_master.vendor_sources v ON v.id = r.vendor_source_id
+        FROM symbols.vendor_api_runs r
+        JOIN symbols.vendor_sources v ON v.id = r.vendor_source_id
         ORDER BY r.started_at DESC, r.id DESC
         LIMIT 1
     """,
@@ -46,8 +46,8 @@ LATEST_RUN_QUERIES: dict[str, str] = {
                r.symbols_requested, r.symbols_succeeded, r.symbols_failed,
                r.bars_upserted, r.errors, r.error_message,
                r.duration_seconds, r.started_at, r.finished_at
-        FROM market_data.vendor_bar_runs r
-        JOIN market_data.vendor_bar_sources s ON s.id = r.vendor_source_id
+        FROM daily_bars.vendor_bar_runs r
+        JOIN daily_bars.vendor_bar_sources s ON s.id = r.vendor_source_id
         ORDER BY r.id DESC
         LIMIT 1
     """,

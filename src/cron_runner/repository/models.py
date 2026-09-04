@@ -1,13 +1,17 @@
 """SQLAlchemy table definitions for cron_runner's owned schema objects.
 
-All objects are prefixed `cron_runner_` because the database may be shared with
-other, unrelated projects/services (see docs/specs/cron_container_spec.md section 8.2).
+All objects live in the dedicated `monitoring` Postgres schema and are also
+prefixed `cron_runner_`, because the database may be shared with other,
+unrelated projects/services (see docs/specs/cron_container_spec.md section 8.2).
 """
 from __future__ import annotations
 
 from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, Text
 
-metadata = MetaData()
+# Postgres schema under which every object owned by this service is cataloged.
+SCHEMA_NAME = "monitoring"
+
+metadata = MetaData(schema=SCHEMA_NAME)
 
 job_runs = Table(
     "cron_runner_job_runs",

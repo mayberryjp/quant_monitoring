@@ -3,12 +3,15 @@ from datetime import UTC, datetime
 from sqlalchemy import create_engine, select
 
 from cron_runner.repository import run_history
-from cron_runner.repository.models import job_runs, metadata
+from cron_runner.repository.models import SCHEMA_NAME, job_runs, metadata
 from cron_runner.workers.job_runner import JobRunResult
 
 
 def make_engine(tmp_path):
-    engine = create_engine(f"sqlite:///{tmp_path / 'test.db'}")
+    # SQLite has no schemas; translate the `monitoring` schema to the default one.
+    engine = create_engine(
+        f"sqlite:///{tmp_path / 'test.db'}"
+    ).execution_options(schema_translate_map={SCHEMA_NAME: None})
     metadata.create_all(engine)
     return engine
 

@@ -39,7 +39,7 @@ STREAMING_STATUS_QUERY = """
            started_at,
            completed_at,
            error
-    FROM replay_sessions
+    FROM streamingchart.replay_sessions
     WHERE created_at >= date_trunc('day', now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'
       AND created_at <  date_trunc('day', now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' + interval '1 day'
     ORDER BY ticker, interval, created_at
