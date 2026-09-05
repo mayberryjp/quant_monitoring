@@ -29,11 +29,11 @@ REPORT_TITLE = "📝 Sticky Notes Report"
 
 STICKY_NOTES_QUERY = """
     SELECT *
-    FROM sticky_notes.sticky_notes
+    FROM stickynotes.sticky_notes
     WHERE status = 'active'
       AND signal_date = (
           SELECT MAX(signal_date)
-          FROM sticky_notes.sticky_notes
+          FROM stickynotes.sticky_notes
           WHERE status = 'active'
       )
     ORDER BY created_at DESC
